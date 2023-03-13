@@ -19,9 +19,6 @@ parser.add_argument('-fp', '--file_pattern',
 
 args = parser.parse_args()
 
-# args.input = 'Tonikaku Kawaii'
-# args.file_pattern = 'Chapter *.cbz'
-
 
 def sort_func(input_file):
     if args.file_pattern is None:
