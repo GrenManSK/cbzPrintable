@@ -69,7 +69,17 @@ def main():
         if times == 0:
             for i in range(10):
                 print(str(i+1) + ') ' + files_temp[i])
-            vstup = int(input('Select HOW MANY IN A ROW volumes to pack > '))
+                try:
+                    print(str(i+1) + ') ' + files_temp[i])
+                except IndexError:
+                    break
+            vstup = input('Select HOW MANY IN A ROW volumes to pack > ')
+            if vstup == '*':
+                vstup = len(files_temp)
+            elif int(vstup) > len(files_temp):
+                vstup = len(files_temp)
+            else:
+                vstup = int(vstup)
             number = 1
             times = vstup
         CbxManager.CbxManager().parse_cbz(file)
@@ -95,12 +105,18 @@ def main():
 
         to_pack = []
         if times == 0:
+            sleep(1)
             number -= 1
-            for i in range(floor(number/2) + 1):
+            for i in range(round(number/2)+1):
                 if 1 + i == number - i:
                     to_pack.append([1 + i])
                 else:
                     to_pack.append([1 + i, number - i])
+            try:
+                if to_pack[-1][0] == to_pack[-2][1] and to_pack[-1][1] == to_pack[-2][0]:
+                    to_pack.pop(-1)
+            except IndexError:
+                pass
             os.makedirs('temp_final', exist_ok=True)
             number_temp = 1
             cislo = 0
@@ -144,6 +160,7 @@ def main():
                     cislo += 1
                     pdf_path = os.path.join(
                         folder_path, filename[:-4] + '.pdf')
+                    print(pdf_path)
                     img.save(pdf_path, 'PDF', resolution=100.0)
                     os.remove(img_path)
             pdf_merger = PyPDF2.PdfMerger()
@@ -160,4 +177,14 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        try:
+            shutil.rmtree('temp')
+        except FileNotFoundError:
+            pass
+        try:
+            shutil.rmtree('temp_final')
+        except FileNotFoundError:
+            pass
