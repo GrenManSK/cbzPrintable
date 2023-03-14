@@ -68,7 +68,6 @@ def main():
         os.makedirs('temp', exist_ok=True)
         if times == 0:
             for i in range(10):
-                print(str(i+1) + ') ' + files_temp[i])
                 try:
                     print(str(i+1) + ') ' + files_temp[i])
                 except IndexError:
