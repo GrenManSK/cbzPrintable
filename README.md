@@ -2,7 +2,6 @@
 
 ## Instalation
 
----
 
 Python `pip install .`
 
