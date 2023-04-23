@@ -9,6 +9,7 @@ from math import floor
 from PIL import Image, ImageOps
 import numpy as np
 import PyPDF2
+import re
 
 
 parser = argparse.ArgumentParser()
@@ -18,16 +19,14 @@ parser.add_argument('-fp', '--file_pattern',
                     help='file pattern same as glob pattern')
 
 args = parser.parse_args()
-
+args.input = 'Ore Dake Haireru Kakushi Dungeon Kossori Kitaete Sekai Saikyou'
 
 def sort_func(input_file):
     if args.file_pattern is None:
-        input_file = input_file.split('.')
-        if len(input_file) == 3:
-            input_file = input_file[0] + '.' + input_file[1]
-        else:
-            input_file = input_file[0]
         input_file = input_file.split('\\')[1]
+        patern = re.compile("^(((V|v)(O|o)(L|l)\.)[0-9]+ (C|c)(H|h).[0-9]+)|((C|c)(H|h).[0-9]+)|((C|c)(H|h)(A|a)(P|p)(T|t)(E|e)(R|r) [0-9]+)$")
+        pos = patern.search(input_file)
+        input_file = input_file[pos.regs[0][0]:pos.regs[0][1]]
         number = -1
         while True:
             try:
@@ -82,11 +81,13 @@ def main():
             number = 1
             times = vstup
         CbxManager.CbxManager().parse_cbz(file)
-        filename = file.split('.')
-        if len(filename) > 2:
-            filename = filename[0] + '.' + filename[1]
-        else:
-            filename = filename[0]
+        patern = re.compile("^(((V|v)(O|o)(L|l)\.)[0-9]+ (C|c)(H|h).[0-9]+)|((C|c)(H|h).[0-9]+)|((C|c)(H|h)(A|a)(P|p)(T|t)(E|e)(R|r) [0-9]+)$")
+        pos = patern.search(file)
+        file_new = file.rsplit('\\', 1)[0] + '\\' + file[pos.regs[0][0]:pos.regs[0][1]]
+        file_old = file.rsplit('.', 1)[0]
+        os.rename(file_old + '\\', file_new + '\\')
+        filename = file_new
+        print(f"{filename}\\*.jpg")
         image_files = glob.glob(f"{filename}\\*.jpg")
         image_files.sort(key=sort_func1)
         for image in image_files:
@@ -94,12 +95,7 @@ def main():
             shutil.move(image, f'temp\\{number}.jpg')
             number += 1
         files_temp.pop(0)
-        temp = file.split('.')
-        if len(temp) > 2:
-            temp = temp[0] + '.' + temp[1]
-        else:
-            temp = file.split('.')[0]
-        shutil.rmtree(f"{temp}\\")
+        shutil.rmtree(f"{filename}\\")
         times -= 1
 
         to_pack = []
