@@ -19,7 +19,6 @@ parser.add_argument('-fp', '--file_pattern',
                     help='file pattern same as glob pattern')
 
 args = parser.parse_args()
-args.input = 'Ore Dake Haireru Kakushi Dungeon Kossori Kitaete Sekai Saikyou'
 
 def sort_func(input_file):
     if args.file_pattern is None:
