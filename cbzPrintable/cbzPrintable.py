@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 def sort_func(input_file):
     if args.file_pattern is None:
-        input_file = input_file.split('\\')[1]
+        input_file = input_file.split('\\')[1].rsplit('.', 1)[0]
         patern = re.compile("^(((V|v)(O|o)(L|l)\.)[0-9]+ (C|c)(H|h).[0-9]+)|((C|c)(H|h).[0-9]+)|((C|c)(H|h)(A|a)(P|p)(T|t)(E|e)(R|r) [0-9]+)$")
         pos = patern.search(input_file)
         input_file = input_file[pos.regs[0][0]:pos.regs[0][1]]
@@ -87,7 +87,7 @@ def main():
         os.rename(file_old + '\\', file_new + '\\')
         filename = file_new
         print(f"{filename}\\*.jpg")
-        image_files = glob.glob(f"{filename}\\*.jpg")
+        image_files = glob.glob(f"{filename}\\*.[p|j][n|p][g]")
         image_files.sort(key=sort_func1)
         for image in image_files:
             print(image)
