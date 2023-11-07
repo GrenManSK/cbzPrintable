@@ -2,6 +2,7 @@ import os
 import sys
 import glob
 import argparse
+import contextlib
 import shutil
 from time import sleep
 import copy
@@ -28,10 +29,10 @@ def sort_func(input_file):
             )[0]
         )
     input_file = input_file.split("\\")[1].rsplit(".", 1)[0]
-    patern = re.compile(
+    pattern = re.compile(
         "^(((V|v)(O|o)(L|l)\.)[0-9]+ (C|c)(H|h).[0-9]+)|((C|c)(H|h).[0-9]+)|((C|c)(H|h)(A|a)(P|p)(T|t)(E|e)(R|r) [0-9]+)$"
     )
-    pos = patern.search(input_file)
+    pos = pattern.search(input_file)
     input_file = input_file[pos.regs[0][0] : pos.regs[0][1]]
     number = -1
     while True:
@@ -71,23 +72,21 @@ def main():
         if times == 0:
             for i in range(10):
                 try:
-                    print(str(i + 1) + ") " + files_temp[i])
+                    print(f"{str(i + 1)}) {files_temp[i]}")
                 except IndexError:
                     break
             vstup = input("Select HOW MANY IN A ROW volumes to pack > ")
-            if vstup == "*":
-                vstup = len(files_temp)
-            elif int(vstup) > len(files_temp):
+            if vstup == "*" or int(vstup) > len(files_temp):
                 vstup = len(files_temp)
             else:
                 vstup = int(vstup)
             number = 1
             times = vstup
         CbxManager.CbxManager().parse_cbz(file)
-        patern = re.compile(
+        pattern = re.compile(
             "^(((V|v)(O|o)(L|l)\.)[0-9]+ (C|c)(H|h).[0-9]+)|((C|c)(H|h).[0-9]+)|((C|c)(H|h)(A|a)(P|p)(T|t)(E|e)(R|r) [0-9]+)$"
         )
-        pos = patern.search(file)
+        pos = pattern.search(file)
         file_new = (
             file.rsplit("\\", 1)[0] + "\\" + file[pos.regs[0][0] : pos.regs[0][1]]
         )
@@ -105,23 +104,21 @@ def main():
         shutil.rmtree(f"{filename}\\")
         times -= 1
 
-        to_pack = []
         if times == 0:
             sleep(1)
             number -= 1
+            to_pack = []
             for i in range(round(number / 2) + 1):
                 if 1 + i == number - i:
                     to_pack.append([1 + i])
                 else:
                     to_pack.append([1 + i, number - i])
-            try:
+            with contextlib.suppress(IndexError):
                 if (
                     to_pack[-1][0] == to_pack[-2][1]
                     and to_pack[-1][1] == to_pack[-2][0]
                 ):
                     to_pack.pop(-1)
-            except IndexError:
-                pass
             os.makedirs("temp_final", exist_ok=True)
             number_temp = 1
             cislo = 0
@@ -163,7 +160,7 @@ def main():
                     if cislo % 2 == 1:
                         img = ImageOps.flip(img)
                     cislo += 1
-                    pdf_path = os.path.join(folder_path, filename[:-4] + ".pdf")
+                    pdf_path = os.path.join(folder_path, f"{filename[:-4]}.pdf")
                     print(pdf_path)
                     img.save(pdf_path, "PDF", resolution=100.0)
                     os.remove(img_path)
@@ -184,11 +181,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        try:
+        with contextlib.suppress(FileNotFoundError):
             shutil.rmtree("temp")
-        except FileNotFoundError:
-            pass
-        try:
+        with contextlib.suppress(FileNotFoundError):
             shutil.rmtree("temp_final")
-        except FileNotFoundError:
-            pass
