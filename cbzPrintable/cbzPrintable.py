@@ -21,31 +21,30 @@ args = parser.parse_args()
 
 
 def sort_func(input_file):
-    if args.file_pattern is None:
-        input_file = input_file.split("\\")[1].rsplit(".", 1)[0]
-        patern = re.compile(
-            "^(((V|v)(O|o)(L|l)\.)[0-9]+ (C|c)(H|h).[0-9]+)|((C|c)(H|h).[0-9]+)|((C|c)(H|h)(A|a)(P|p)(T|t)(E|e)(R|r) [0-9]+)$"
-        )
-        pos = patern.search(input_file)
-        input_file = input_file[pos.regs[0][0] : pos.regs[0][1]]
-        number = -1
-        while True:
-            try:
-                a = input_file[number : len(input_file)]
-                if a[0] == ".":
-                    number -= 1
-                    continue
-                value = float(input_file[number : len(input_file)])
-                number -= 1
-            except ValueError:
-                break
-        return value
-    else:
+    if args.file_pattern is not None:
         return float(
             input_file.split(args.file_pattern.split("*")[0])[1].split(
                 args.file_pattern.split("*")[1]
             )[0]
         )
+    input_file = input_file.split("\\")[1].rsplit(".", 1)[0]
+    patern = re.compile(
+        "^(((V|v)(O|o)(L|l)\.)[0-9]+ (C|c)(H|h).[0-9]+)|((C|c)(H|h).[0-9]+)|((C|c)(H|h)(A|a)(P|p)(T|t)(E|e)(R|r) [0-9]+)$"
+    )
+    pos = patern.search(input_file)
+    input_file = input_file[pos.regs[0][0] : pos.regs[0][1]]
+    number = -1
+    while True:
+        try:
+            a = input_file[number:]
+            if a[0] == ".":
+                number -= 1
+                continue
+            value = float(input_file[number:])
+            number -= 1
+        except ValueError:
+            break
+    return value
 
 
 def sort_func1(input_file):
