@@ -11,14 +11,70 @@ from PIL import Image, ImageOps
 import numpy as np
 import PyPDF2
 import re
+from cbzPrintable.__init__ import VERSION
+
+print(f"using cbzPrintable {VERSION}")
+
+explain = {}
 
 
-parser = argparse.ArgumentParser()
+def check_for_error(errors, func):
+    if len(errors) == 0:
+        return
+    if isinstance(errors, dict):
+        max_overflow = 15
+        for error, data in errors.items():
+            if len(data) > max_overflow:
+                print(
+                    f"ERROR: {func.__name__} failed with return code {error}; {data[:max_overflow]} ..."
+                )
+            else:
+                print(f"ERROR: {func.__name__} failed with return code {error}; {data}")
+    else:
+        for error in errors:
+            print(f"ERROR: {func.__name__} failed with return code {error}")
 
-parser.add_argument("input", help="input folder")
-parser.add_argument("-fp", "--file_pattern", help="file pattern same as glob pattern")
+    print(f"\nTry adding '--explain {min(errors)}' to see the error code")
 
-args = parser.parse_args()
+
+def ErrorWrapper(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return_code = func(*args, **kwargs)
+            if return_code == 0:
+                sys.exit(0)
+            elif return_code is None:
+                print(f"WARNING: {func.__name__} should return 0")
+            elif isinstance(return_code, str):
+                print(f"WARNING: {func.__name__} should not return a string but 0")
+            elif isinstance(return_code, bool):
+                print(f"WARNING: {func.__name__} should not return a bool but 0")
+            elif isinstance(return_code, float):
+                print(f"WARNING: {func.__name__} should not return a float but 0")
+            elif isinstance(return_code, (list, tuple, set, dict)):
+                check_for_error(return_code, func)
+            elif isinstance(return_code, bytes):
+                print(f"WARNING: {func.__name__} should not return a bytes but 0")
+            elif isinstance(return_code, bytearray):
+                print(f"WARNING: {func.__name__} should not return a bytearray but 0")
+            elif return_code == 1 and isinstance(return_code, int):
+                print(f"ERROR: {func.__name__} failed with return code {return_code}")
+            elif return_code != 0 and isinstance(return_code, int):
+                print(
+                    f"ERROR: {func.__name__} failed with return code {return_code}\n\nTry adding '--explain {return_code}' to see the error code"
+                )
+                sys.exit(return_code)
+            else:
+                print(
+                    "WARNING: "
+                    + func.__name__
+                    + f" should return 0, not {type(return_code)}"
+                )
+        except Exception as e:
+            print(e)
+            return 1
+
+    return wrapper
 
 
 def sort_func(input_file):
@@ -54,7 +110,28 @@ def sort_func1(input_file):
     return input_file
 
 
+@ErrorWrapper
 def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--explain",
+        type=int,
+        help="explain error code",
+        choices=explain.keys(),
+        metavar="ERROR_CODE",
+        default=None,
+    )
+    parser.add_argument("input", help="input folder")
+    parser.add_argument(
+        "-fp", "--file_pattern", help="file pattern same as glob pattern"
+    )
+    args = parser.parse_args()
+
+    if args.explain is not None:
+        print(f"EXPLAIN: Explaining error code: {args.explain}")
+        print(f" EXPLAIN:  {explain[args.explain]}")
+        return 0
     try:
         import CbxManager
     except ImportError:
